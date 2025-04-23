@@ -7,6 +7,7 @@ import { Upload, Check, Loader2, ImageIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { mealAnalyzerFlow } from "@/utils/meal-analyzer" 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -156,27 +157,16 @@ export default function CalorieCounter() {
     }
 
     try {
-      const formData = new FormData();
-      const imageBlob = await fetch(selectedImage.url).then(r => r.blob());
-      formData.append("image_file", imageBlob, selectedImage.fileName);
+      // Call the frontend meal analyzer flow directly
+      const analysisResult = await mealAnalyzerFlow(selectedImage.url)
 
-      const response = await fetch("http://localhost:8000/estimate", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const mealAnalysis = data.result.ingredients;
-
-      setResults(mealAnalysis);
-      setHasAnalyzed(true);
+      setResults(analysisResult.ingredients)
+      setHasAnalyzed(true)
     } catch (error) {
-      console.error("Error analyzing image:", error);
-      alert("Failed to analyze image. Please try again.");
+      console.error("Error analyzing image:", error)
+      // Provide a more specific error message if possible
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred."
+      alert(`Failed to analyze image: ${errorMessage}. Please try again.`)
     } finally {
       setIsAnalyzing(false);
     }
